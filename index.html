@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yuanzhe Lu</title>
-<meta name="description" content="Case study: an automated workflow that takes tickets from a GitHub Project board to merged pull requests with Claude agents, and asks a person only where judgement is needed.">
+<meta name="description" content="Yuanzhe Lu: portfolio. a clinic workflow platform built end to end with an AI assistant at its centre, and an automated workflow that takes tickets from a GitHub Project board to merged pull requests with Claude agents.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
 <style>
-/* Layout: one reading column of about 65 characters; figures step out to a wider measure. The track of
-   stages a ticket passes through is the page's one signature figure. Actor colours (agent, rule,
-   person) carry through every figure. */
+/* Layout: a sticky left column (who, where to go, how to reach) and a scrolling right column (the
+   work). The nav is drawn as the same track of stage dots a ticket moves along; a dot fills when its
+   section is on screen. Actor colours (agent, rule, person) carry through every figure. */
 :root {
   --paper: #f5f6f3;
   --panel: #ffffff;
   --ink: #16181b;
   --muted: #5a606a;
   --line: #d9dcd5;
-  --merge: #6243b8;      /* a merged pull request: the accent */
+  --merge: #6243b8;
   --merge-soft: #ece7f8;
   --agent: #6243b8;
   --rule: #39414d;
@@ -29,8 +29,6 @@
   --display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
   --body: "Source Serif 4", Georgia, "Times New Roman", serif;
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --read: 40rem;
-  --wide: 66rem;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -47,109 +45,107 @@
   color-scheme: dark;
 }
 
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   background: var(--paper);
   color: var(--ink);
   font: 400 1.0625rem/1.65 var(--body);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 0 4rem;
+  padding-block: 0;
 }
-main { display: grid; gap: 4.5rem; }
-.read { max-width: var(--read); margin-inline: auto; width: 100%; }
-.wide { max-width: var(--wide); margin-inline: auto; width: 100%; }
-section { display: grid; gap: 1.25rem; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
-h1 { font-size: clamp(2rem, 1.2rem + 3.6vw, 3.4rem); line-height: 1.06; font-weight: 800; }
-h2 { font-size: clamp(1.45rem, 1.1rem + 1.2vw, 1.9rem); line-height: 1.15; font-weight: 700; }
-h3 { font-size: 1.08rem; line-height: 1.3; font-weight: 700; }
+h2 { font-size: clamp(1.4rem, 1.15rem + 1vw, 1.8rem); line-height: 1.15; font-weight: 700; }
+h3 { font-size: 1.05rem; line-height: 1.3; font-weight: 700; }
 p { margin: 0; }
-.lede { font-size: 1.22rem; line-height: 1.55; color: var(--ink); }
 .muted { color: var(--muted); }
-.label {
-  font: 500 0.72rem/1.3 var(--mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
+.label { font: 500 0.72rem/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 code, .mono { font-family: var(--mono); font-size: 0.86em; }
 a { color: var(--merge); text-underline-offset: 3px; }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--merge); outline-offset: 3px; border-radius: 2px; }
+a:focus-visible { outline: 2px solid var(--merge); outline-offset: 3px; border-radius: 2px; }
+.fine { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
 
-/* ---- who: the person, before the project ---- */
-.intro { padding-block: 3.25rem 0; display: grid; gap: 1.1rem; }
-.name { font: 800 clamp(2.2rem, 1.4rem + 3.4vw, 3.6rem)/1 var(--display); letter-spacing: -0.02em; margin: 0; }
-.role { font: 500 clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem)/1.35 var(--display); color: var(--muted); margin: 0; }
-.contact { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.contact .btn { text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; }
-.ph { background: var(--person-soft); color: var(--person); border-radius: 3px; padding: 0 0.3em; }
-.btn .ph { padding: 0 0.2em; }
+/* ---- the two columns ---- */
+.shell { max-width: 76rem; margin-inline: auto; display: grid; grid-template-columns: minmax(0, 19rem) minmax(0, 1fr); gap: clamp(2rem, 1rem + 4vw, 6rem); }
+.side { position: sticky; top: env(safe-area-inset-top, 0px); height: 100vh; height: 100dvh; padding-block: 4.5rem 2.5rem; display: flex; flex-direction: column; gap: 2.25rem; }
+.content { padding-block: 4.5rem 5rem; display: grid; gap: 5.5rem; min-width: 0; container-type: inline-size; }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .side { position: static; height: auto; padding-block: 3rem 0; gap: 1.25rem; }
+  .side nav { display: none; }
+  .content { padding-block: 3rem 4rem; gap: 4rem; }
+}
 
-/* ---- the project at a glance ---- */
-.glance { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: clamp(1.1rem, 0.8rem + 1.5vw, 2rem); display: grid; gap: 1.5rem; }
-.glance-head { display: grid; gap: 0.5rem; }
-.glance-head h1 { font-size: clamp(1.6rem, 1.1rem + 2vw, 2.4rem); line-height: 1.1; }
-.glance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 2rem; }
-.glance-grid div { display: grid; gap: 0.3rem; min-width: 0; align-content: start; }
-.glance-grid p { font-size: 0.98rem; line-height: 1.55; }
-@media (max-width: 640px) { .glance-grid { grid-template-columns: 1fr; } }
-.glance-links { display: flex; flex-wrap: wrap; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--line); }
-.glance-links a.btn { text-decoration: none; }
+/* ---- left column ---- */
+.name { font: 800 clamp(2.3rem, 1.8rem + 1.8vw, 3.1rem)/1 var(--display); letter-spacing: -0.025em; margin: 0; }
+.role { font: 500 1.08rem/1.35 var(--display); margin: 0; }
+.intro { font-size: 1rem; line-height: 1.6; color: var(--muted); max-width: 22rem; }
+.side nav ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; position: relative; }
+.side nav ol::before { content: ""; position: absolute; left: 0.45rem; top: 0.9rem; bottom: 0.9rem; width: 2px; background: var(--line); }
+.side nav a { display: grid; grid-template-columns: 0.95rem 1fr; gap: 0.85rem; align-items: center; padding-block: 0.5rem; text-decoration: none; color: var(--muted); font: 500 0.95rem/1.2 var(--display); }
+.side nav a i { width: 0.95rem; height: 0.95rem; border-radius: 50%; border: 2px solid var(--line); background: var(--paper); position: relative; z-index: 1; transition: background 0.2s ease, border-color 0.2s ease; }
+.side nav a:hover { color: var(--ink); }
+.side nav a:hover i { border-color: var(--merge); }
+.side nav a[aria-current="true"] { color: var(--ink); }
+.side nav a[aria-current="true"] i { border-color: var(--merge); background: var(--merge); }
+.side .links { margin-top: auto; display: grid; gap: 0.6rem; }
+.side .links a { font: 500 0.92rem/1.2 var(--display); text-decoration: none; display: inline-flex; gap: 0.5rem; align-items: center; color: var(--ink); }
+.side .links a:hover { color: var(--merge); }
+.side .links svg { width: 1.05rem; height: 1.05rem; fill: currentColor; flex: none; }
+@media (max-width: 900px) { .side .links { margin-top: 0; } }
 
-/* ---- what it shows ---- */
-.shows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.25rem; }
-.show { display: grid; gap: 0.35rem; align-content: start; padding-top: 0.75rem; border-top: 2px solid var(--merge); min-width: 0; }
-.show p { font-size: 0.95rem; line-height: 1.55; }
-.show .proof { font-size: 0.88rem; color: var(--muted); }
-@media (max-width: 640px) { .shows { grid-template-columns: 1fr; } }
-.ask { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; counter-reset: q; }
-.ask li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 0.5rem; counter-increment: q; }
-.ask li::before { content: "Q" counter(q); font: 500 0.8rem/1.9 var(--mono); color: var(--merge); }
-.divider { display: flex; align-items: center; gap: 1rem; }
-.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+/* ---- sections ---- */
+section { display: grid; gap: 1.4rem; scroll-margin-top: 2rem; }
+.sec-head { display: grid; gap: 0.5rem; }
 
-/* ---- header ---- */
-header.top { padding-block: 0; display: grid; gap: 1.4rem; }
-.facts { display: flex; flex-wrap: wrap; gap: 0.5rem 1.75rem; padding-top: 0.75rem; border-top: 1px solid var(--line); }
-.facts div { display: grid; gap: 0.15rem; min-width: 0; }
-.facts b { font: 500 0.9rem/1.4 var(--display); }
+/* overview */
+.overview h1 { font-size: clamp(1.75rem, 1.2rem + 2vw, 2.6rem); line-height: 1.08; font-weight: 800; }
+.lede { font-size: 1.15rem; line-height: 1.55; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem 1.5rem; }
+.stat { display: grid; gap: 0.2rem; padding-top: 0.7rem; border-top: 2px solid var(--ink); min-width: 0; }
+.stat b { font: 800 2.3rem/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.stat span { font-size: 0.88rem; line-height: 1.35; color: var(--muted); }
+@container (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.part { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.5rem 1.25rem; padding: 1rem 1.15rem; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-size: 0.98rem; line-height: 1.55; }
+.part .label { padding-top: 0.2rem; }
+@container (max-width: 560px) { .part { grid-template-columns: 1fr; } }
 
-/* ---- the track ---- */
-.track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; position: relative; }
-.track::before { content: ""; position: absolute; left: 0; right: 0; top: 0.6rem; height: 2px; background: var(--line); }
-.stage { position: relative; display: grid; gap: 0.35rem; padding-right: 0.9rem; align-content: start; }
-.dot { width: 1.2rem; height: 1.2rem; border-radius: 50%; background: var(--paper); border: 3px solid var(--rule); position: relative; z-index: 1; }
+/* the track */
+.track { list-style: none; margin: 0; padding: 0; display: grid; position: relative; }
+.track::before { content: ""; position: absolute; left: 0.53rem; top: 1rem; bottom: 1rem; width: 2px; background: var(--line); }
+.stage { display: grid; grid-template-columns: 1.2rem 9.5rem minmax(0, 1fr); gap: 0.2rem 1rem; align-items: baseline; padding-block: 0.55rem; }
+.dot { width: 1.2rem; height: 1.2rem; border-radius: 50%; background: var(--paper); border: 3px solid var(--rule); position: relative; z-index: 1; align-self: center; }
 .stage[data-who="agent"] .dot { border-color: var(--agent); }
 .stage[data-who="person"] .dot { border-color: var(--person); background: var(--person-soft); }
 .stage[data-who="done"] .dot { border-color: var(--merge); background: var(--merge); }
-.stage .who { font: 500 0.68rem/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0.4rem; }
+.stage h3 { font-size: 0.98rem; display: grid; gap: 0.1rem; }
+.stage .who { font: 500 0.66rem/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
 .stage[data-who="agent"] .who { color: var(--agent); }
 .stage[data-who="rule"] .who, .stage[data-who="done"] .who { color: var(--rule); }
 .stage[data-who="person"] .who { color: var(--person); }
-.stage h3 { font-size: 0.98rem; }
-.stage p { font-size: 0.88rem; line-height: 1.45; color: var(--muted); }
-.track-note { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; align-items: baseline; padding-top: 1rem; border-top: 1px dashed var(--line); font-size: 0.95rem; }
-.key { display: inline-flex; align-items: center; gap: 0.4rem; font: 500 0.72rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.key i { width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 2px solid; display: inline-block; }
-@media (max-width: 760px) {
-  .track { grid-template-columns: 1fr; gap: 1.1rem; }
-  .track::before { left: 0.53rem; right: auto; top: 0.6rem; bottom: 0.6rem; width: 2px; height: auto; }
-  .stage { grid-template-columns: 1.2rem 1fr; column-gap: 0.9rem; padding-right: 0; }
-  .stage .dot { grid-row: span 3; }
-  .stage .who { margin-top: 0; }
+.stage p { font-size: 0.92rem; line-height: 1.45; color: var(--muted); }
+@container (max-width: 560px) {
+  .stage { grid-template-columns: 1.2rem minmax(0, 1fr); }
+  .stage p { grid-column: 2; }
 }
+.track-note { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: baseline; font-size: 0.92rem; }
+.key { display: inline-flex; align-items: center; gap: 0.4rem; font: 500 0.7rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.key i { width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 2px solid; display: inline-block; }
 
-/* ---- numbers ---- */
-.figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem 2rem; }
-.figure { display: grid; gap: 0.2rem; padding-top: 0.75rem; border-top: 2px solid var(--ink); min-width: 0; }
-.figure b { font: 800 2.4rem/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-.figure span { font-size: 0.92rem; line-height: 1.4; color: var(--muted); }
-@media (max-width: 640px) { .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.bars { display: grid; gap: 1.5rem; }
+/* what it shows */
+.shows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2rem; }
+.show { display: grid; gap: 0.35rem; align-content: start; padding-top: 0.75rem; border-top: 2px solid var(--merge); min-width: 0; }
+.show p { font-size: 0.95rem; line-height: 1.55; }
+.show .proof { font-size: 0.86rem; color: var(--muted); }
+@container (max-width: 560px) { .shows { grid-template-columns: 1fr; } }
+
+/* results bars */
+.bars { display: grid; gap: 1.4rem; }
 .bar { display: grid; gap: 0.5rem; }
 .bar-head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: baseline; }
 .bar-head h3 { font-size: 1rem; }
-.strip { display: flex; height: 1.9rem; border-radius: 3px; overflow: hidden; background: var(--line); }
+.strip { display: flex; height: 1.8rem; border-radius: 3px; overflow: hidden; background: var(--line); }
 .strip span { display: block; height: 100%; }
 .strip span + span { border-left: 2px solid var(--paper); }
 .legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
@@ -160,330 +156,574 @@ header.top { padding-block: 0; display: grid; gap: 1.4rem; }
 .c-person { background: var(--person); }
 .c-merge { background: var(--merge); }
 .c-open { background: var(--muted); }
-.fine { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
 
-/* ---- decisions ---- */
-.decisions { display: grid; gap: 1.6rem; }
-.decision { display: grid; gap: 0.45rem; padding-left: 1rem; border-left: 2px solid var(--line); }
+/* case study blocks */
+.sub { display: grid; gap: 1rem; }
+.sub + .sub { padding-top: 2.25rem; border-top: 1px solid var(--line); }
+.decisions { display: grid; gap: 1.4rem; }
+.decision { display: grid; gap: 0.4rem; padding-left: 1rem; border-left: 2px solid var(--line); }
+.decision p { font-size: 0.98rem; }
 
-/* ---- sandbox diagram ---- */
-.box-diagram { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.zone { padding: 1.1rem 1.2rem; display: grid; gap: 0.75rem; align-content: start; min-width: 0; }
+.box-diagram { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.zone { padding: 1rem 1.1rem; display: grid; gap: 0.7rem; align-content: start; min-width: 0; }
 .zone.host { border-right: 1px solid var(--line); }
 .zone.box { border-left: 1px dashed var(--changes); background: color-mix(in oklab, var(--changes) 5%, var(--panel)); }
-.zone h3 { font-size: 0.95rem; }
-.zone ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; font-size: 0.9rem; line-height: 1.4; }
+.zone ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; font-size: 0.88rem; line-height: 1.4; }
 .zone li { display: grid; grid-template-columns: 1rem 1fr; gap: 0.4rem; }
 .zone li::before { content: "•"; color: var(--muted); }
 .zone.host li.secret::before { content: "◆"; color: var(--person); font-size: 0.75rem; padding-top: 0.15rem; }
-.flows { padding: 1.1rem 1rem; display: grid; gap: 0.85rem; align-content: center; min-width: 0; }
-.flow { display: grid; gap: 0.15rem; font-size: 0.86rem; line-height: 1.35; }
-.flow .arrow { font: 500 0.78rem/1.2 var(--mono); color: var(--ink); }
+.flows { padding: 1rem 0.9rem; display: grid; gap: 0.8rem; align-content: center; min-width: 0; }
+.flow { display: grid; gap: 0.15rem; font-size: 0.84rem; line-height: 1.35; }
+.flow .arrow { font: 500 0.76rem/1.2 var(--mono); color: var(--ink); }
 .flow .arrow.out { color: var(--merge); }
 .flow .arrow.no { color: var(--changes); }
 .flow span:last-child { color: var(--muted); }
-@media (max-width: 760px) {
+@container (max-width: 640px) {
   .box-diagram { grid-template-columns: 1fr; }
   .zone.host { border-right: 0; border-bottom: 1px solid var(--line); }
   .zone.box { border-left: 0; border-top: 1px dashed var(--changes); }
 }
 
-/* ---- what went wrong ---- */
-.log { display: grid; gap: 0; border-top: 1px solid var(--line); }
-.log-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; padding-block: 1rem; border-bottom: 1px solid var(--line); }
-.log-row p { font-size: 0.97rem; line-height: 1.55; }
-.log-row h3 { font-size: 1rem; margin-bottom: 0.25rem; }
-@media (max-width: 640px) { .log-row { grid-template-columns: 1fr; gap: 0.5rem; } }
+.log { display: grid; border-top: 1px solid var(--line); }
+.log-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; padding-block: 0.95rem; border-bottom: 1px solid var(--line); }
+.log-row p { font-size: 0.95rem; line-height: 1.55; }
+.log-row h3 { font-size: 0.98rem; margin-bottom: 0.2rem; }
+@container (max-width: 560px) { .log-row { grid-template-columns: 1fr; gap: 0.4rem; } }
 
-/* ---- the manager card ---- */
-.card-wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
-@media (max-width: 760px) { .card-wrap { grid-template-columns: 1fr; } }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1.1rem 1.2rem; display: grid; gap: 0.8rem; font-family: var(--display); box-shadow: 0 1px 0 var(--line); }
+.card-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.75rem; align-items: start; }
+@container (max-width: 640px) { .card-wrap { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; display: grid; gap: 0.75rem; font-family: var(--display); }
 .card-top { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .pill { font: 500 0.72rem/1 var(--mono); padding: 0.32rem 0.5rem; border-radius: 999px; background: var(--person-soft); color: var(--person); letter-spacing: 0.03em; }
-.card .refs { font: 400 0.78rem/1.2 var(--mono); color: var(--muted); }
-.card h3 { font-size: 1rem; line-height: 1.35; }
-.card .sum { font: 400 0.9rem/1.5 var(--body); color: var(--muted); }
-.ai { display: grid; gap: 0.3rem; padding: 0.75rem 0.85rem; border-radius: 6px; background: var(--merge-soft); }
-.ai b { font-weight: 700; }
-.ai .why { font: 400 0.86rem/1.5 var(--body); }
-.ai .head { font-size: 0.88rem; }
+.card .refs { font: 400 0.76rem/1.2 var(--mono); color: var(--muted); }
+.card h3 { font-size: 0.98rem; line-height: 1.35; }
+.card .sum { font: 400 0.88rem/1.5 var(--body); color: var(--muted); }
+.ai { display: grid; gap: 0.3rem; padding: 0.7rem 0.8rem; border-radius: 6px; background: var(--merge-soft); }
+.ai .head { font-size: 0.86rem; }
 .ai .head span { color: var(--muted); font-weight: 500; }
-.buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.btn { font: 500 0.85rem/1 var(--display); padding: 0.55rem 0.8rem; border-radius: 6px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
-.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.caption { font-size: 0.85rem; color: var(--muted); line-height: 1.45; }
-.tiers { display: grid; gap: 0.9rem; }
-.tier { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.75rem; align-items: baseline; font-size: 0.95rem; line-height: 1.5; }
+.ai .why { font: 400 0.85rem/1.5 var(--body); }
+.btn { font: 500 0.85rem/1 var(--display); padding: 0.55rem 0.8rem; border-radius: 6px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); justify-self: start; }
+.caption { font-size: 0.84rem; color: var(--muted); line-height: 1.45; }
+.tiers { display: grid; gap: 0.8rem; }
+.tier { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.75rem; align-items: baseline; font-size: 0.94rem; line-height: 1.5; }
 .tier .label { color: var(--ink); }
 
-/* ---- footer ---- */
-.next { display: grid; gap: 0.6rem; padding: 0; margin: 0; list-style: none; }
-.next li { padding-left: 1.4rem; position: relative; }
-.next li::before { content: ""; position: absolute; left: 0; top: 0.62rem; width: 0.65rem; height: 0.65rem; border: 2px solid var(--merge); border-radius: 50%; }
-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem 2rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: 0.9rem; color: var(--muted); }
-@media (prefers-reduced-motion: no-preference) {
-  .stage .dot { transition: transform 0.2s ease; }
-  .stage:hover .dot { transform: scale(1.15); }
+.next { display: grid; gap: 0.55rem; padding: 0; margin: 0; list-style: none; }
+/* The circle sits in the middle of the first line: half the line height (1.65em) less half its size. */
+.next li { display: flex; gap: 0.75rem; font-size: 0.98rem; line-height: 1.65; }
+.next li::before { content: ""; flex: none; box-sizing: border-box; width: 0.75rem; height: 0.75rem; margin-top: calc(0.825em - 0.375rem); border: 2px solid var(--merge); border-radius: 50%; }
+
+/* ---- projects: a tab per project, each with its own sections and its own nav ---- */
+.projects { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.projects a { font: 500 0.9rem/1 var(--display); text-decoration: none; color: var(--muted); padding: 0.55rem 0.8rem; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+.projects a:hover { color: var(--ink); border-color: var(--merge); }
+.projects a[aria-current="true"] { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+.project { display: grid; gap: 5.5rem; min-width: 0; }
+.project[hidden], .side nav[hidden] { display: none; }
+@media (max-width: 900px) { .project { gap: 4rem; } }
+
+/* the stack: three columns, client to data */
+.stack { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.stack .zone + .zone { border-left: 1px solid var(--line); }
+.zone .tech { font: 400 0.76rem/1.45 var(--mono); color: var(--muted); }
+@container (max-width: 640px) {
+  .stack { grid-template-columns: 1fr; }
+  .stack .zone + .zone { border-left: 0; border-top: 1px solid var(--line); }
 }
+
+/* product areas */
+.areas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.area { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem 0.9rem; display: grid; gap: 0.25rem; align-content: start; min-width: 0; }
+.area h3 { font-size: 0.95rem; }
+.area p { font-size: 0.88rem; line-height: 1.45; color: var(--muted); }
+@container (max-width: 760px) { .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 480px) { .areas { grid-template-columns: 1fr; } }
+
+/* before and after, one thin bar each */
+.pair { display: grid; gap: 0.3rem; }
+.meter { height: 0.8rem; border-radius: 3px; overflow: hidden; background: var(--line); }
+.meter span { display: block; height: 100%; }
+.sub > .label + .decisions { margin-top: -0.25rem; }
+
+footer { padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: 0.88rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; justify-content: space-between; }
 </style>
 <style>html { -webkit-text-size-adjust: 100%; } body { margin: 0; } img { max-width: 100%; } :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }</style>
 </head>
 <body>
-<main>
-  <header class="intro read">
-    <span class="label">Portfolio</span>
-    <p class="name">Yuanzhe Lu</p>
-    <p class="role">AI agents, developer tooling and the controls around them</p>
-    <p>I build systems that let AI agents do real engineering work on a team's codebase, and I decide where a person has to stay in the loop. Below is the one I designed, built and ran in production.</p>
-  </header>
+<div class="shell">
+  <aside class="side">
+    <div style="display:grid;gap:0.9rem">
+      <p class="name">Yuanzhe Lu</p>
+      <p class="role">Full-stack engineer: AI agents, the products they work in, and the controls around them</p>
+      <p class="intro">I build software end to end, and AI agents that do real work inside it: a clinic workflow platform with its assistant, and a workflow that takes tickets to merged pull requests. I decide where a person stays in the loop.</p>
+    </div>
+    <div class="projects" role="navigation" aria-label="Projects">
+      <a href="#overview" data-for="p-workflow" aria-current="true">Agent workflow</a>
+      <a href="#clinic" data-for="p-clinic" aria-current="false">Clinic platform</a>
+    </div>
+    <nav aria-label="Sections" data-for="p-workflow">
+      <ol>
+        <li><a href="#overview"><i></i>Overview</a></li>
+        <li><a href="#shows"><i></i>What it shows</a></li>
+        <li><a href="#case"><i></i>Case study</a></li>
+        <li><a href="#security"><i></i>Security</a></li>
+        <li><a href="#manager"><i></i>AI manager</a></li>
+      </ol>
+    </nav>
+    <nav aria-label="Clinic platform sections" data-for="p-clinic" hidden>
+      <ol>
+        <li><a href="#clinic"><i></i>Overview</a></li>
+        <li><a href="#clinic-product"><i></i>The product</a></li>
+        <li><a href="#clinic-assistant"><i></i>AI assistant</a></li>
+        <li><a href="#clinic-internals"><i></i>Assistant internals</a></li>
+        <li><a href="#clinic-ai"><i></i>AI in the product</a></li>
+        <li><a href="#clinic-stack"><i></i>Full stack</a></li>
+        <li><a href="#clinic-next"><i></i>What's next</a></li>
+      </ol>
+    </nav>
+    <div class="links">
+      <a href="https://github.com/kevin0437"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>github.com/kevin0437</a>
+      <span class="fine">Figures as of 10 November 2026</span>
+    </div>
+  </aside>
 
-  <section class="wide" aria-labelledby="h-glance">
-    <div class="glance">
-      <div class="glance-head">
+  <main class="content">
+    <div class="project" id="p-workflow">
+    <section id="overview" class="overview" aria-labelledby="h-overview">
+      <div class="sec-head">
         <span class="label">Featured project · 2026 · TypeScript, Claude Agent SDK, GitHub, Docker</span>
-        <h1 id="h-glance">An automated workflow from GitHub ticket to merged pull request</h1>
+        <h1 id="h-overview">An automated workflow from GitHub ticket to merged pull request</h1>
       </div>
-      <div class="glance-grid">
-        <div><span class="label">Problem</span><p>A product team had more well-specified tickets than people, and code review was already the bottleneck.</p></div>
-        <div><span class="label">What I built</span><p>A service where Claude agents take labelled tickets, write the code, open and review pull requests, and a policy merges what passes. People get one page listing only what needs them.</p></div>
-        <div><span class="label">Result</span><p>In its first twelve days on a production monorepo: 46 pull requests from 54 tickets, 36 merged, none abandoned.</p></div>
-        <div><span class="label">My part</span><p>Designed, built and ran it end to end: architecture, agent prompts, GitHub integration, sandbox, dashboard, and the day-to-day decisions about what the agents may do alone.</p></div>
+      <p class="lede">Claude agents take labelled tickets from a project board, write the code, open and review pull requests, and a policy merges what passes. People see one page: only what needs them.</p>
+      <div class="stats">
+        <div class="stat"><b>54</b><span>tickets worked</span></div>
+        <div class="stat"><b>46</b><span>pull requests opened</span></div>
+        <div class="stat"><b>36</b><span>merged, none abandoned</span></div>
+        <div class="stat"><b>12</b><span>days, on a production monorepo</span></div>
       </div>
-      <div class="glance-links">
-        <a class="btn primary" href="#h-track">Read the case study</a>
-        <span class="btn">Code walkthrough on request</span>
+      <div class="part">
+        <span class="label">My part</span>
+        <p>Designed, built and ran it end to end: architecture, agent prompts, GitHub integration, the sandbox, the dashboard, and the day-to-day calls on what the agents may do alone.</p>
+        <span class="label">Problem</span>
+        <p>A product team had more well-specified tickets than people, and code review was already the bottleneck.</p>
       </div>
-    </div>
-  </section>
+      <ol class="track" aria-label="Stages a ticket passes through">
+        <li class="stage" data-who="person"><span class="dot"></span><h3><span class="who">Person</span>Label the ticket</h3><p>One label on a board card hands it over.</p></li>
+        <li class="stage" data-who="agent"><span class="dot"></span><h3><span class="who">Agent</span>Build</h3><p>Own branch and workspace; runs the tests, reviews its own diff, opens a PR. Asks instead of guessing.</p></li>
+        <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>CI and CI reviewer</h3><p>Medium findings and worse go back to the builder before a costlier review.</p></li>
+        <li class="stage" data-who="agent"><span class="dot"></span><h3><span class="who">Agent</span>Second review</h3><p>Against the acceptance criteria, the repository's rules and its high-risk paths.</p></li>
+        <li class="stage" data-who="person"><span class="dot"></span><h3><span class="who">Person</span>Needs you</h3><p>Drafts on teammates' PRs, the builder's questions, anything no rule decides.</p></li>
+        <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Auto-merge policy</h3><p>Approves and queues a pass only if every rule holds; otherwise it comes back with the reason.</p></li>
+        <li class="stage" data-who="done"><span class="dot"></span><h3><span class="who">GitHub</span>Merged</h3><p>Through the merge queue. A dropped builder PR is retried once or sent back with why.</p></li>
+      </ol>
+      <div class="track-note">
+        <span class="key"><i style="border-color:var(--agent)"></i>Agent</span>
+        <span class="key"><i style="border-color:var(--rule)"></i>Rule</span>
+        <span class="key"><i style="border-color:var(--person)"></i>Person</span>
+        <span class="muted">Demo repository: label to passing PR with a saved review in about 5.5 minutes, $0.90 at API prices.</span>
+      </div>
+    </section>
 
-  <section class="read" aria-labelledby="h-shows">
-    <span class="label">What this project shows</span>
-    <h2 id="h-shows">Skills, with the evidence on this page</h2>
-    <div class="shows">
-      <div class="show"><h3>Agent systems in production</h3><p>Two agent roles, a builder and a reviewer, running unattended against a real board, with retries, budgets and a run ledger.</p><span class="proof">239 builder runs and 171 reviews in twelve days.</span></div>
-      <div class="show"><h3>Security engineering</h3><p>A container that holds no credentials: pushes go out as a git bundle, the model key stays behind a per-run proxy, private networks are closed.</p><span class="proof">Each control tested against real Docker, with and without the sandbox.</span></div>
-      <div class="show"><h3>Product judgement about autonomy</h3><p>Deciding which decisions an agent may take, which a rule takes, and which stay with a person, and changing that from data.</p><span class="proof">Auto-merge as versioned policy; reviews of teammates' work stay drafts.</span></div>
-      <div class="show"><h3>Measuring before trusting</h3><p>An AI manager that runs in shadow mode and is compared against a person's own decisions before it gets any authority.</p><span class="proof">Automatic closures left out, so the agreement rate counts only real decisions.</span></div>
-      <div class="show"><h3>Platform design</h3><p>Turned a one-team tool into one codebase for any repository, with a single project file and a one-command setup.</p><span class="proof">Refactor proven by identical output, every prompt byte for byte.</span></div>
-      <div class="show"><h3>Debugging live systems</h3><p>Finding failures nobody saw: PRs silently leaving the merge queue, a "daily" limit that was not daily, stale waiting lists.</p><span class="proof">Four of them, with what changed, under What went wrong.</span></div>
-    </div>
-  </section>
+    <section id="shows" aria-labelledby="h-shows">
+      <div class="sec-head">
+        <span class="label">What this project shows</span>
+        <h2 id="h-shows">Skills, with the evidence on this page</h2>
+      </div>
+      <div class="shows">
+        <div class="show"><h3>Agent systems in production</h3><p>A builder and a reviewer agent running unattended against a real board, with retries, budgets and a run ledger.</p><span class="proof">239 builder runs and 171 reviews in twelve days.</span></div>
+        <div class="show"><h3>Security engineering</h3><p>A container that holds no credentials: pushes leave as a git bundle, the model key stays behind a per-run proxy.</p><span class="proof">Each control tested against real Docker, with and without the sandbox.</span></div>
+        <div class="show"><h3>Judgement about autonomy</h3><p>Deciding which calls an agent takes, which a rule takes, and which stay with a person, and moving that line with data.</p><span class="proof">Auto-merge as versioned policy; teammates' reviews stay drafts.</span></div>
+        <div class="show"><h3>Measuring before trusting</h3><p>An AI manager in shadow mode, compared with a person's own decisions before it gets any authority.</p><span class="proof">Automatic closures are left out, so the rate counts real decisions only.</span></div>
+        <div class="show"><h3>Platform design</h3><p>Turned a one-team tool into one codebase for any repository, with one project file and a one-command setup.</p><span class="proof">Refactor proven by identical output, every prompt byte for byte.</span></div>
+        <div class="show"><h3>Debugging live systems</h3><p>Finding failures nobody saw: PRs silently leaving the merge queue, a "daily" limit that was not daily.</p><span class="proof">Four of them, and what changed, in the case study.</span></div>
+      </div>
+    </section>
 
-  <section class="read" aria-labelledby="h-ask">
-    <span class="label">For the interview</span>
-    <h2 id="h-ask">Questions I am happy to go deep on</h2>
-    <ol class="ask">
-      <li><span>How do you let an agent push code without giving it a credential it could leak?</span></li>
-      <li><span>Which decisions should an AI never take alone, and how did you decide where that line is?</span></li>
-      <li><span>How do you know an AI reviewer is good enough to act, and what would make you take that back?</span></li>
-      <li><span>What broke in production, and how did you find out?</span></li>
-      <li><span>What did it cost per merged pull request, and what would you change to lower it?</span></li>
-    </ol>
-  </section>
-
-  <div class="divider read"><span class="label">Case study</span></div>
-
-  <header class="top read">
-    <h2 style="font-size:clamp(1.6rem,1.1rem + 2vw,2.4rem)">From ticket to merged pull request, with a person only where judgement is needed</h2>
-    <p class="lede">An automated workflow that takes tickets from a GitHub Project board, has Claude agents build and review them, and merges what passes its rules. People see one page: what needs them.</p>
-    <div class="facts">
-      <div><span class="label">Ran on</span><b>A production TypeScript monorepo</b></div>
-      <div><span class="label">First twelve days</span><b>46 PRs opened, 36 merged</b></div>
-      <div><span class="label">Size</span><b>13,000 lines, 8,300 of tests</b></div>
-    </div>
-  </header>
-
-  <section class="read" aria-labelledby="h-problem">
-    <span class="label">The problem</span>
-    <h2 id="h-problem">More well-specified tickets than hands, and review already the bottleneck</h2>
-    <p>Coding agents could write the code. The question was how to let them work through a board unattended without giving up control: who decides what gets built, what gets posted on GitHub in the team's name, and what gets merged.</p>
-  </section>
-
-  <section class="wide" aria-labelledby="h-track">
-    <div class="read" style="display:grid;gap:1rem;margin-inline:0">
-      <span class="label">What it does</span>
-      <h2 id="h-track">One ticket's track</h2>
-      <p>Every ticket moves along the same stages. Each stage belongs to an agent, a rule or a person, and the person's stages are kept as few as the risk allows.</p>
-    </div>
-    <ol class="track" aria-label="Stages a ticket passes through">
-      <li class="stage" data-who="person"><span class="dot"></span><span class="who">Person</span><h3>Label the ticket</h3><p>One label on a board card hands it over.</p></li>
-      <li class="stage" data-who="agent"><span class="dot"></span><span class="who">Agent</span><h3>Build</h3><p>Own branch and workspace; runs the tests, reviews its diff, opens a PR. Asks instead of guessing.</p></li>
-      <li class="stage" data-who="rule"><span class="dot"></span><span class="who">Rule</span><h3>CI and CI reviewer</h3><p>Medium findings and worse go back to the builder before any costlier review.</p></li>
-      <li class="stage" data-who="agent"><span class="dot"></span><span class="who">Agent</span><h3>Second review</h3><p>Against the acceptance criteria, the repo's rules and its high-risk paths.</p></li>
-      <li class="stage" data-who="person"><span class="dot"></span><span class="who">Person</span><h3>Needs you</h3><p>Drafts on teammates' PRs, questions, anything a rule would not decide.</p></li>
-      <li class="stage" data-who="rule"><span class="dot"></span><span class="who">Rule</span><h3>Auto-merge policy</h3><p>A pass is approved and queued only if every rule holds; if not, it comes back with the reason.</p></li>
-      <li class="stage" data-who="done"><span class="dot"></span><span class="who">GitHub</span><h3>Merged</h3><p>Through the merge queue. A builder PR the queue drops is retried once or sent back with why.</p></li>
-    </ol>
-    <div class="track-note">
-      <span class="key"><i style="border-color:var(--agent)"></i>Agent</span>
-      <span class="key"><i style="border-color:var(--rule)"></i>Rule</span>
-      <span class="key"><i style="border-color:var(--person)"></i>Person</span>
-      <span class="muted">On a fresh demo repository: label to passing PR with a saved review in about 5.5 minutes, $0.90 at API prices.</span>
-    </div>
-  </section>
-
-  <section class="read" aria-labelledby="h-results">
-    <span class="label">Results</span>
-    <h2 id="h-results">The first twelve days on a production codebase</h2>
-    <div class="figures">
-      <div class="figure"><b>54</b><span>tickets worked by the builder</span></div>
-      <div class="figure"><b>46</b><span>pull requests opened, none closed unmerged</span></div>
-      <div class="figure"><b>36</b><span>merged; 11 approved by the auto-merge policy</span></div>
-      <div class="figure"><b>25</b><span>questions the builder asked instead of guessing</span></div>
-      <div class="figure"><b>27 min</b><span>median builder run; 12 min median review</span></div>
-      <div class="figure"><b>21 h</b><span>median from PR opened to merged</span></div>
-    </div>
-    <div class="bars">
-      <div class="bar">
-        <div class="bar-head"><h3>Pull requests opened</h3><span class="mono muted">46</span></div>
-        <div class="strip" role="img" aria-label="46 pull requests: 36 merged, 10 still open">
-          <span class="c-merge" style="width:78.26%"></span><span class="c-open" style="width:21.74%"></span>
-        </div>
-        <div class="legend"><span><i class="c-merge"></i>36 merged</span><span><i class="c-open"></i>10 still open</span></div>
+    <section id="case" aria-labelledby="h-case">
+      <div class="sec-head">
+        <span class="label">Case study</span>
+        <h2 id="h-case">Results, and the decisions behind them</h2>
       </div>
-      <div class="bar">
-        <div class="bar-head"><h3>Second reviews, saved as drafts</h3><span class="mono muted">131</span></div>
-        <div class="strip" role="img" aria-label="131 review drafts: 61 pass, 37 changes, 33 need a person">
-          <span class="c-pass" style="width:46.56%"></span><span class="c-changes" style="width:28.24%"></span><span class="c-person" style="width:25.19%"></span>
-        </div>
-        <div class="legend"><span><i class="c-pass"></i>61 pass</span><span><i class="c-changes"></i>37 changes</span><span><i class="c-person"></i>33 need a person</span></div>
-      </div>
-    </div>
-    <p class="fine">From the service's run ledger and the GitHub API, 29 October to 10 November 2026. Ledger costs are the SDK's estimates at API prices; the team ran on a subscription.</p>
-  </section>
-
-  <section class="read" aria-labelledby="h-decisions">
-    <span class="label">Decisions worth explaining</span>
-    <h2 id="h-decisions">Where control stays, and why</h2>
-    <div class="decisions">
-      <div class="decision">
-        <h3>A person decides what goes out on other people's work</h3>
-        <p>A review of a teammate's PR is a draft until a person posts it. Only reviews of the builder's own PRs that ask for changes go out by rule: there a click only delayed the fix, and 46 of 105 drafts on the builder's PRs went stale while they waited. The builder can push and open PRs, but never approve, merge or post a review.</p>
-      </div>
-      <div class="decision">
-        <h3>Cheap checks before expensive ones</h3>
-        <p>The second review starts only once CI passes and the CI reviewer holds nothing above low open. Low findings are left to the review to weigh: when they sent PRs back too, 38 of 111 rounds went back for lows alone. From the second round on, the review reads only what changed since its last posted review, plus the high-risk paths in full.</p>
-      </div>
-      <div class="decision">
-        <h3>Auto-merge as policy, not as trust</h3>
-        <p>The merge rules live in their own repository with their own GitHub App, versioned and reviewed like code, and one repository variable turns them off. Hard rules (protected paths, open findings, recent reverts) cannot be overridden from the dashboard; soft ones (size, labels) can, by a person, one PR at a time.</p>
-      </div>
-      <div class="decision">
-        <h3>Waiting lists are worked out, not accumulated</h3>
-        <p>Needs you began as a list of events, each closed only by the step that handled it, and 26 of 42 waiting items had gone out of date. It is now computed from where every PR stands: what will never need a person is closed with the reason, what waits on something else is held with one line saying what, and the rest is the list.</p>
-      </div>
-      <div class="decision">
-        <h3>One codebase for any repository</h3>
-        <p>Everything particular to a project moved into one project file: repository, board, column names, install steps, review rules. The refactor was proven safe by loading the production configuration before and after, identical down to every rendered prompt, byte for byte. <code>init</code> sets up a new repository and board in one command.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="wide" aria-labelledby="h-sandbox">
-    <div class="read" style="display:grid;gap:1rem;margin-inline:0">
-      <span class="label">Security</span>
-      <h2 id="h-sandbox">The agent's container holds no credentials</h2>
-      <p>Each agent run, install script and git command that touches a workspace runs in a throwaway container. Everything worth stealing stays on the host side of this line.</p>
-    </div>
-    <div class="box-diagram" role="figure" aria-label="What stays on the host and what runs in the container">
-      <div class="zone host">
-        <span class="label">Host</span>
-        <ul>
-          <li class="secret">GitHub token</li>
-          <li class="secret">Model API key</li>
-          <li>Read-only mirror of the repository</li>
-          <li>API proxy: issues a token per run</li>
-          <li>Imports the run's commits, checks every object, pushes</li>
-        </ul>
-      </div>
-      <div class="flows">
-        <div class="flow"><span class="arrow">mirror ⟶ origin</span><span>The workspace can fetch, never push.</span></div>
-        <div class="flow"><span class="arrow out">⟵ git bundle on stdout</span><span>To push, the container hands over a bundle. Host git never runs inside a workspace, because it would obey the agent's <code>.git/config</code>.</span></div>
-        <div class="flow"><span class="arrow out">⟵ run token ⟶ model API</span><span>Valid for this run and the model endpoints only; revoked when the run ends.</span></div>
-        <div class="flow"><span class="arrow no">✕ private addresses</span><span>The host, the local network, other containers and cloud metadata are rejected.</span></div>
-      </div>
-      <div class="zone box">
-        <span class="label">Container</span>
-        <ul>
-          <li>The agent and its workspace</li>
-          <li>Firewall set up as root, then root and every capability dropped for good</li>
-          <li>No token, no key, no route to the host</li>
-        </ul>
-      </div>
-    </div>
-    <p class="fine read" style="margin-inline:0">Each control is tested against real Docker with a control case: the attack is shown to work without the sandbox, then to fail with it. Fourteen such end-to-end tests run alongside more than 440 unit tests. The sandbox is the mode for new projects; the first team's own machine ran without it.</p>
-  </section>
-
-  <section class="read" aria-labelledby="h-wrong">
-    <span class="label">What went wrong</span>
-    <h2 id="h-wrong">And what changed because of it</h2>
-    <div class="log">
-      <div class="log-row">
-        <div><h3>PRs vanished from the merge queue</h3><p>GitHub records the removal only on the PR's timeline, so nobody noticed.</p></div>
-        <p>The workflow reads it, retries once when the runner or the clock failed it, and otherwise sends it back to the builder with the failing step and its errors. The first card caught a PR that had silently failed twice.</p>
-      </div>
-      <div class="log-row">
-        <div><h3>A daily spending limit that was not daily</h3><p>It counted from process start, reset on restart, and each daemon counted alone.</p></div>
-        <p>It now sums the day's runs from the shared run ledger.</p>
-      </div>
-      <div class="log-row">
-        <div><h3>A reviewer that would wait forever</h3><p>On a new project it waited for a CI reviewer only the first team ran.</p></div>
-        <p>Found by running a brand-new repository end to end. The CI reviewer is now optional.</p>
-      </div>
-      <div class="log-row">
-        <div><h3>A path check the proxy could be talked out of</h3><p><code>/v1/messages/../files</code> passed the allow-list and was normalised into something else on the way out.</p></div>
-        <p>Caught in self-review. The check now runs on the path as it will be sent.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="wide" aria-labelledby="h-manager">
-    <div class="read" style="display:grid;gap:1rem;margin-inline:0">
-      <span class="label">In progress</span>
-      <h2 id="h-manager">An AI manager, on probation</h2>
-    </div>
-    <div class="card-wrap">
-      <div style="display:grid;gap:0.6rem;min-width:0">
-        <div class="card" aria-label="Illustration of a Needs you card">
-          <div class="card-top"><span class="pill">Draft, your call</span><span class="refs">Issue #1 · PR #2</span></div>
-          <h3>Review of #2 (pass, highest none): Add a multiply function</h3>
-          <p class="sum">Adds <code>multiply(a, b)</code> with tests for zero, negatives and decimals. All three acceptance criteria are met and CI passed.</p>
-          <div class="ai">
-            <span class="head">AI would: <b>Auto-merge</b> <span>· 90% sure</span></span>
-            <span class="why">A small change that meets every criterion, touches no high-risk path, and has nothing open from CI.</span>
+      <div class="sub">
+        <div class="bars">
+          <div class="bar">
+            <div class="bar-head"><h3>Pull requests opened</h3><span class="mono muted">46</span></div>
+            <div class="strip" role="img" aria-label="46 pull requests: 36 merged, 10 still open"><span class="c-merge" style="width:78.26%"></span><span class="c-open" style="width:21.74%"></span></div>
+            <div class="legend"><span><i class="c-merge"></i>36 merged, 11 approved by the auto-merge policy</span><span><i class="c-open"></i>10 still open</span></div>
           </div>
-          <div class="buttons"><span class="btn primary">Open the review</span></div>
+          <div class="bar">
+            <div class="bar-head"><h3>Second reviews, saved as drafts</h3><span class="mono muted">131</span></div>
+            <div class="strip" role="img" aria-label="131 review drafts: 61 pass, 37 changes, 33 need a person"><span class="c-pass" style="width:46.56%"></span><span class="c-changes" style="width:28.24%"></span><span class="c-person" style="width:25.19%"></span></div>
+            <div class="legend"><span><i class="c-pass"></i>61 pass</span><span><i class="c-changes"></i>37 changes</span><span><i class="c-person"></i>33 need a person</span></div>
+          </div>
         </div>
-        <p class="caption">Redrawn from the dashboard with the demo repository's ticket. In the live tool the reason is written in the owner's language.</p>
+        <p class="fine">Median builder run 27 min, review 12 min, PR opened to merged 21 hours. The builder asked a person 25 questions instead of guessing. From the run ledger and the GitHub API, 29 October to 10 November 2026; costs are SDK estimates at API prices, and the team ran on a subscription.</p>
       </div>
-      <div style="display:grid;gap:1rem;min-width:0">
-        <p>The next layer takes decisions off the person's list. A model reads each item that waits on them and writes down what it would do, how sure it is and why. It acts on none of it yet. Its calls are set against what the person then did, by kind of decision, and a kind is handed over only once the two agree.</p>
-        <div class="tiers">
-          <div class="tier"><span class="label">By rule</span><span>Post a review the way the rule says, acknowledge a notice.</span></div>
-          <div class="tier"><span class="label">Judged</span><span>Answer the builder's question, send a pass to auto-merge.</span></div>
-          <div class="tier"><span class="label">A person's</span><span>Approving a teammate's PR, or merging past a review that asked for a person. These stay gates whatever the score.</span></div>
+      <div class="sub">
+        <div class="decisions">
+          <div class="decision"><h3>A person decides what goes out on other people's work</h3><p>A review of a teammate's PR is a draft until a person posts it. Only reviews of the builder's own PRs that ask for changes go out by rule: a click there only delayed the fix, and 46 of 105 drafts on its PRs went stale waiting. The builder can push and open PRs, never approve, merge or post a review.</p></div>
+          <div class="decision"><h3>Cheap checks before expensive ones</h3><p>The second review starts only once CI passes and nothing above low is open. Low findings are left for the review to weigh: when they sent PRs back too, 38 of 111 rounds went back for lows alone. Later rounds read only what changed since the last posted review.</p></div>
+          <div class="decision"><h3>Auto-merge as policy, not as trust</h3><p>The merge rules live in their own repository with their own GitHub App, versioned and reviewed like code. Hard rules cannot be overridden from the dashboard; soft ones can, by a person, one PR at a time.</p></div>
+          <div class="decision"><h3>Waiting lists are worked out, not accumulated</h3><p>Needs you began as a list of events, and 26 of 42 waiting items had gone out of date. It is now computed from where every PR stands: what will never need a person is closed with the reason, the rest is the list.</p></div>
+          <div class="decision"><h3>One codebase for any repository</h3><p>Everything particular to a project moved into one file. The refactor was proven safe by loading the production configuration before and after: identical, down to every rendered prompt. <code>init</code> sets up a new repository and board in one command.</p></div>
         </div>
-        <p class="fine">Items a rule closed before the person decided are left out of the agreement rate, so it measures only real decisions. A call that keeps failing is tried three times and then left alone.</p>
       </div>
+      <div class="sub">
+        <h3>What went wrong, and what changed</h3>
+        <div class="log">
+          <div class="log-row"><div><h3>PRs vanished from the merge queue</h3><p class="muted">GitHub records it only on the PR's timeline.</p></div><p>The workflow reads it, retries once when the runner failed, and otherwise sends the PR back with the failing step. The first catch had silently failed twice.</p></div>
+          <div class="log-row"><div><h3>A daily limit that was not daily</h3><p class="muted">It reset on restart, and each daemon counted alone.</p></div><p>It now sums the day's runs from the shared ledger.</p></div>
+          <div class="log-row"><div><h3>A reviewer that would wait forever</h3><p class="muted">For a CI reviewer only the first team ran.</p></div><p>Found by running a brand-new repository end to end; the CI reviewer is now optional.</p></div>
+          <div class="log-row"><div><h3>A path check the proxy could be talked out of</h3><p class="muted"><code>/v1/messages/../files</code> passed the allow-list.</p></div><p>Caught in self-review; the check now runs on the path as it will be sent.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="security" aria-labelledby="h-security">
+      <div class="sec-head">
+        <span class="label">Security</span>
+        <h2 id="h-security">The agent's container holds no credentials</h2>
+        <p class="muted">Each agent run, install script and git command that touches a workspace runs in a throwaway container. Everything worth stealing stays on the host.</p>
+      </div>
+      <div class="box-diagram" role="figure" aria-label="What stays on the host and what runs in the container">
+        <div class="zone host">
+          <span class="label">Host</span>
+          <ul>
+            <li class="secret">GitHub token</li>
+            <li class="secret">Model API key</li>
+            <li>Read-only mirror of the repository</li>
+            <li>API proxy, one token per run</li>
+            <li>Imports the run's commits, checks every object, pushes</li>
+          </ul>
+        </div>
+        <div class="flows">
+          <div class="flow"><span class="arrow">mirror ⟶ origin</span><span>The workspace can fetch, never push.</span></div>
+          <div class="flow"><span class="arrow out">⟵ git bundle on stdout</span><span>Host git never runs inside a workspace; it would obey the agent's <code>.git/config</code>.</span></div>
+          <div class="flow"><span class="arrow out">⟵ run token ⟶ model API</span><span>Valid for this run and the model endpoints only.</span></div>
+          <div class="flow"><span class="arrow no">✕ private addresses</span><span>Host, local network, other containers and cloud metadata are rejected.</span></div>
+        </div>
+        <div class="zone box">
+          <span class="label">Container</span>
+          <ul>
+            <li>The agent and its workspace</li>
+            <li>Firewall set as root, then root and every capability dropped</li>
+            <li>No token, no key, no route to the host</li>
+          </ul>
+        </div>
+      </div>
+      <p class="fine">Each control is tested against real Docker with a control case: the attack works without the sandbox and fails with it. Fourteen such tests run alongside more than 440 unit tests. The sandbox is the mode for new projects; the first team's own machine ran without it.</p>
+    </section>
+
+    <section id="manager" aria-labelledby="h-manager">
+      <div class="sec-head">
+        <span class="label">In progress</span>
+        <h2 id="h-manager">An AI manager, on probation</h2>
+      </div>
+      <div class="card-wrap">
+        <div style="display:grid;gap:0.6rem;min-width:0">
+          <div class="card" aria-label="Illustration of a Needs you card">
+            <div class="card-top"><span class="pill">Draft, your call</span><span class="refs">Issue #1 · PR #2</span></div>
+            <h3>Review of #2 (pass, highest none): Add a multiply function</h3>
+            <p class="sum">Adds <code>multiply(a, b)</code> with tests for zero, negatives and decimals. All three acceptance criteria met; CI passed.</p>
+            <div class="ai"><span class="head">AI would: <b>Auto-merge</b> <span>· 90% sure</span></span><span class="why">A small change that meets every criterion, touches no high-risk path, and has nothing open from CI.</span></div>
+            <span class="btn">Open the review</span>
+          </div>
+          <p class="caption">Redrawn from the dashboard with the demo repository's ticket.</p>
+        </div>
+        <div style="display:grid;gap:1rem;min-width:0">
+          <p>A model reads each item that waits on a person and writes down what it would do, how sure it is and why. It acts on none of it yet. Its calls are set against what the person then did, by kind, and a kind is handed over only once the two agree.</p>
+          <div class="tiers">
+            <div class="tier"><span class="label">By rule</span><span>Post a review as the rule says, acknowledge a notice.</span></div>
+            <div class="tier"><span class="label">Judged</span><span>Answer the builder's question, send a pass to auto-merge.</span></div>
+            <div class="tier"><span class="label">A person's</span><span>Approving a teammate's PR, or merging past a review that asked for a person. Gates whatever the score.</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <h3>Still open</h3>
+        <ul class="next">
+          <li>Hand over the first kinds of decisions the manager agrees on.</li>
+          <li>A GitHub App identity for the builder, so its PRs and a person's approvals come from different accounts.</li>
+          <li>A full model run inside the sandbox; so far verified up to the agent reaching the model through the proxy.</li>
+          <li>An egress allow-list, so code in a run cannot send what it reads to arbitrary public addresses.</li>
+        </ul>
+      </div>
+    </section>
     </div>
-  </section>
 
-  <section class="read" aria-labelledby="h-next">
-    <span class="label">What is next</span>
-    <h2 id="h-next">Still open</h2>
-    <ul class="next">
-      <li>Hand over the first kinds of decisions the manager agrees on.</li>
-      <li>A GitHub App identity for the builder, so its PRs and a person's approvals come from different accounts.</li>
-      <li>A full model run inside the sandbox with an API key. So far it is verified up to the agent starting and reaching the model through the proxy.</li>
-      <li>An egress allow-list, so code in a run cannot send what it reads to arbitrary public addresses.</li>
-    </ul>
-  </section>
+    <div class="project" id="p-clinic">
+    <section id="clinic" class="overview" aria-labelledby="h-clinic">
+      <div class="sec-head">
+        <span class="label">Featured product · 2026 · TypeScript, React 19, Express 5, PostgreSQL, FHIR, Amazon Bedrock</span>
+        <h1 id="h-clinic">A clinic workflow platform I built end to end, with an AI assistant at its centre</h1>
+      </div>
+      <p class="lede">Patient charts, procedures, scheduling, documents and faxes, tasks, stock and staff for clinics across several sites, in one system built for many organisations. On every page an assistant looks things up and gets things done through the same API and permissions as the person asking, and changes nothing without their click.</p>
+      <div class="stats">
+        <div class="stat"><b>1,000+</b><span>API endpoints</span></div>
+        <div class="stat"><b>194</b><span>data models</span></div>
+        <div class="stat"><b>~480</b><span>assistant tools</span></div>
+        <div class="stat"><b>15,000+</b><span>automated tests</span></div>
+      </div>
+      <div class="part">
+        <span class="label">My part</span>
+        <p>Designed and built all of it on my own: the product, data model, API, web app, AI features, the assistant, CI and releases. About 550,000 lines of TypeScript and 300,000 more of tests, March to November 2026.</p>
+        <span class="label">Problem</span>
+        <p>Staff ran patients, procedures, faxes, schedules and stock across disconnected tools and paper, and spent hours reading documents to file them. The practice needed one system, and AI to do the reading, where a wrong patient match or a silent change to a record is never acceptable.</p>
+      </div>
+    </section>
 
-  <footer class="read">
-    <span>Yuanzhe Lu</span>
-    <span>Built with TypeScript, the Claude Agent SDK, GitHub GraphQL and REST, GitHub Actions and Docker. Figures as of 10 November 2026.</span>
-  </footer>
-</main>
+    <section id="clinic-product" aria-labelledby="h-clinic-product">
+      <div class="sec-head">
+        <span class="label">The product</span>
+        <h2 id="h-clinic-product">One system for the clinic's whole day</h2>
+        <p class="muted">More than 120 routes in a dense, keyboard-first web app that turns into a phone layout below 768 px.</p>
+      </div>
+      <div class="areas">
+        <div class="area"><h3>Dashboard</h3><p>The day's schedule, tasks, on-call and a live ready-for-provider board, arranged by each user.</p></div>
+        <div class="area"><h3>Patient chart</h3><p>Procedures, follow-ups, prior auth, plan of care, insurance, documents, imaging, forms and history, in the tab order each user drags.</p></div>
+        <div class="area"><h3>Procedure pipeline</h3><p>Every patient's procedure track on one page, prior authorizations, and coding worklists.</p></div>
+        <div class="area"><h3>Scheduling and on-call</h3><p>Day, week, month and per-provider calendars, check-in, appointment types and an on-call grid.</p></div>
+        <div class="area"><h3>Documents and fax intake</h3><p>Uploads and incoming faxes are split, read and filed to the right chart, or queued for a person with ranked candidates.</p></div>
+        <div class="area"><h3>Visit recording</h3><p>Record a visit; get a transcript with speakers, notes in the clinic's templates, a live checklist and follow-up fields filled in.</p></div>
+        <div class="area"><h3>Tasks and messaging</h3><p>Task boards, threads, reactions, voice notes and presence, live over one WebSocket.</p></div>
+        <div class="area"><h3>Inventory</h3><p>Stock by place, lot and expiry, transfers between sites, QR labels, and stock added from a photo or a narrated video.</p></div>
+        <div class="area"><h3>Research</h3><p>Cohorts, and AI columns that answer a question from each case's notes with a word-for-word quote.</p></div>
+        <div class="area"><h3>Kiosk and signed forms</h3><p>Patients fill and sign forms in the waiting room; each signature is sealed to the exact text signed.</p></div>
+        <div class="area"><h3>Staff and education</h3><p>People, an org chart, continuing-education courses and a certificate builder.</p></div>
+        <div class="area"><h3>Administration</h3><p>An AI control centre (models, prompts, memory, usage and cost), the audit log, agent runs and imports.</p></div>
+      </div>
+    </section>
+
+    <section id="clinic-assistant" aria-labelledby="h-clinic-assistant">
+      <div class="sec-head">
+        <span class="label">The AI assistant</span>
+        <h2 id="h-clinic-assistant">An assistant that acts as the user, and never more</h2>
+        <p class="muted">Staff ask in plain words: pull up her latest imaging report, list my open tasks and each patient's open orders, book a follow-up. It answers with links into the app, opens pages with forms already filled in, reads files dropped into the chat, and keeps going after the tab is closed.</p>
+      </div>
+      <ol class="track" aria-label="Steps of one assistant turn">
+        <li class="stage" data-who="person"><span class="dot"></span><h3><span class="who">Person</span>Ask</h3><p>The message becomes a run in a job pool: one run per conversation, followed live by any page that opens it.</p></li>
+        <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Pick the tools</h3><p>12 core tools, plus 12 of about 480 found by keyword and embedding search fused by rank; the long tail is one search away. A tool the user's role cannot use is never offered.</p></li>
+        <li class="stage" data-who="agent"><span class="dot"></span><h3><span class="who">Agent</span>Plan and look up</h3><p>A checklist for a request of several steps. Reads in a round run together; writes run one at a time, in order.</p></li>
+        <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Call the API as the user</h3><p>Every tool goes back through the API with the user's own credentials, so permissions, tenant and audit are the real ones. A result over 8,000 characters is kept whole and read in parts.</p></li>
+        <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Treat results as data</h3><p>Every result goes back marked as data, not instructions. Text that reads like an instruction is cautioned and logged, never dropped.</p></li>
+        <li class="stage" data-who="person"><span class="dot"></span><h3><span class="who">Person</span>Confirm the write</h3><p>A write becomes a card naming what it changes, with fields to edit. Single-use, the user's own, gone after ten minutes; a second click gets the first result back.</p></li>
+        <li class="stage" data-who="done"><span class="dot"></span><h3><span class="who">Record</span>Summarise the run</h3><p>How it ended, rounds, tool calls, cost and the build that served it: ids and counts, never content.</p></li>
+      </ol>
+      <div class="track-note">
+        <span class="key"><i style="border-color:var(--agent)"></i>Agent</span>
+        <span class="key"><i style="border-color:var(--rule)"></i>Rule</span>
+        <span class="key"><i style="border-color:var(--person)"></i>Person</span>
+        <span class="muted">LangChain's createAgent on Amazon Bedrock's Converse API, with Claude models.</span>
+      </div>
+      <div class="sub">
+        <div class="decisions">
+          <div class="decision"><h3>Tools made from the API's own schemas</h3><p>Some tools are hand-written; most were generated from an audit of the API's endpoints. A write tool takes its parameters from the same Zod schema its endpoint validates with, so the two cannot drift. An organisation can switch a tool off or add its own phrasing for retrieval, never rewrite one: names and descriptions stay in code, reviewed and measured.</p></div>
+          <div class="decision"><h3>My own confirmation cards, not the framework's</h3><p>LangChain's human-in-the-loop middleware failed my proof of concept: it held reads back until approval, dropped an approved write when another was rejected, and ran a write twice on a double click. Writes became stored, single-use cards that any server process can confirm.</p></div>
+          <div class="decision"><h3>Writes need a click; reads need a guard</h3><p>With every write behind a click, the exposed surface is what the model reads: faxes, documents and form answers can carry text aimed at it. The guard observes and cautions and never blocks, because a clinical note that happens to look like an instruction must still reach the model; silently dropping data is the worse failure.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="clinic-internals" aria-labelledby="h-clinic-internals">
+      <div class="sec-head">
+        <span class="label">Assistant internals</span>
+        <h2 id="h-clinic-internals">Built to run unattended, and measured before it changes</h2>
+      </div>
+      <div class="shows">
+        <div class="show"><h3>Turns that survive a crash</h3><p>Every tool call is checkpointed in Postgres, and the process running a turn holds a short lease it keeps renewing. When a process dies, another takes the turn over with a compare-and-swap and re-runs only the call that was in flight.</p><span class="proof">At most one process ever continues a turn.</span></div>
+        <div class="show"><h3>Bounded, always</h3><p>300 seconds a turn, 30 to the first token, 15 between tokens, 20 for a read. A write is never aborted half way. At the round cap the model gets one more call to answer from what it found.</p><span class="proof">Stop works exactly the way a limit does.</span></div>
+        <div class="show"><h3>Retrieval tuned on data</h3><p>Keyword ranking at half weight: equal weight dropped the tuning score from 62/64 to 56/64. One vector per usage example: averaging buried an exact match at rank 25 of 406. Earlier messages at half weight took follow-ups from 9/14 to 12/14.</p><span class="proof">The core set is every tool used in at least 2% of turns.</span></div>
+        <div class="show"><h3>Cached by design</h3><p>Bedrock caches tools before the system prompt, so I split the prompt into a shared and a per-user half, put a cache point after the fixed tool head, and moved rules a tool needs onto that tool.</p><span class="proof">Cost per round down 35% on a new subject, 69% on the same one.</span></div>
+        <div class="show"><h3>Context that stays small</h3><p>History is budgeted at 8,000 tokens, after measuring 76 real sessions. Past 40,000 tokens in a turn, older tool results are cleared from what the model is sent. Long conversations are summarised in the background; a recall tool reads back what was cut.</p><span class="proof">A summary holds patient data: stored on the tenant's row only.</span></div>
+        <div class="show"><h3>Memory without a pending queue</h3><p>"Remember…" saves a preference at once. A small model proposes the implicit ones, kept above 0.85 confidence, and a nightly job merges similar rules and archives idle ones.</p><span class="proof">Each user sees and edits their own.</span></div>
+      </div>
+      <div class="sub">
+        <div class="bars">
+          <div class="bar">
+            <div class="bar-head"><h3>Whole requests completed</h3><span class="mono muted">53% → 69%</span></div>
+            <div class="pair" role="img" aria-label="Task-completion eval: 53% with an 8-round cap, 69% with 12 rounds and older results trimmed">
+              <div class="meter"><span class="c-open" style="width:53%"></span></div>
+              <div class="meter"><span class="c-merge" style="width:69%"></span></div>
+            </div>
+            <div class="legend"><span><i class="c-open"></i>8-round cap</span><span><i class="c-merge"></i>12 rounds, older results trimmed past 40k tokens</span></div>
+          </div>
+          <div class="bar">
+            <div class="bar-head"><h3>Right tool for requests it was never tuned on</h3><span class="mono muted">82% → 92%</span></div>
+            <div class="pair" role="img" aria-label="Routing eval, held-out set: 82% with keyword and embedding search, 92% with a cross-encoder rerank added">
+              <div class="meter"><span class="c-open" style="width:82%"></span></div>
+              <div class="meter"><span class="c-merge" style="width:92%"></span></div>
+            </div>
+            <div class="legend"><span><i class="c-open"></i>keyword and embedding, fused</span><span><i class="c-merge"></i>plus a cross-encoder rerank</span></div>
+          </div>
+        </div>
+        <p class="fine">The task-completion eval runs whole conversations with the real engine, model and tools, and never confirms a card. Answers are judged by text checks, and where a fact can be laid out many ways, by a model judge calibrated on answers whose verdict is known. A routing eval with a held-out set measures how much the tuning overfits. A model change, from gpt-5.2 to Claude Sonnet 5, held every eval at baseline. Single runs are noisy, and I read them that way.</p>
+      </div>
+      <div class="sub">
+        <h3>How it evolved</h3>
+        <div class="log">
+          <div class="log-row"><div><h3>March · A hand-written loop</h3><p class="muted">The first version.</p></div><p>Sixteen tools, an eight-round cap, and confirmation cards for every write from the start.</p></div>
+          <div class="log-row"><div><h3>June · A catalogue and retrieval</h3><p class="muted">From tens of tools to hundreds.</p></div><p>Tools generated from the API, a per-organisation overlay, embedding retrieval, and a search tool for the long tail.</p></div>
+          <div class="log-row"><div><h3>August · Checkpoints and a graph</h3><p class="muted">Behind a flag, then an A/B over 400 turns.</p></div><p>A LangGraph engine with checkpoints and tracing, the injection guard, and tool vectors moved into pgvector.</p></div>
+          <div class="log-row"><div><h3>September · Bedrock and Claude</h3><p class="muted">Evals held at baseline.</p></div><p>Off direct model APIs onto Amazon Bedrock, and the prompt split for caching.</p></div>
+          <div class="log-row"><div><h3>October · createAgent and the job pool</h3><p class="muted">One engine left.</p></div><p>LangChain's createAgent as the only engine, with planning, compaction, runs in a job pool, and takeover after a crash.</p></div>
+          <div class="log-row"><div><h3>November · Rerank and the long tail</h3><p class="muted">Measured on the held-out set.</p></div><p>A cross-encoder as a third ranking, the long tail behind search, and a summary row for every run.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="clinic-ai" aria-labelledby="h-clinic-ai">
+      <div class="sec-head">
+        <span class="label">AI in the product</span>
+        <h2 id="h-clinic-ai">AI does the reading; rules and people decide what it may change</h2>
+      </div>
+      <div class="shows">
+        <div class="show"><h3>Intake that files itself, carefully</h3><p>Merged PDFs are split, each page read from its own text, else by OCR, else by a vision model, and the person it is about matched. A document files itself only on agreeing identifiers with no contradiction, and only when an independent model check agrees; anything else waits in a review queue with ranked candidates.</p><span class="proof">Any error in the check counts as "do not file".</span></div>
+        <div class="show"><h3>Documents read in full, searched by passage</h3><p>Long documents are read in 30-page sections, then combined. Passages are embedded with a model-written context, ranked three ways, fused by rank and reranked by a cross-encoder. Every passage is re-checked against the caller's live access.</p><span class="proof">A slow reranker falls back to the fused order.</span></div>
+        <div class="show"><h3>Imaging studies matched like a person would</h3><p>Code narrows the candidates to the same birth date and a name rule; a model judges each pair same, different or unsure. A study links only when it has exactly one "same", and every link can be undone.</p><span class="proof">"A missed study is acceptable and a wrong one is not."</span></div>
+        <div class="show"><h3>A visit, recorded into notes</h3><p>A recording becomes a transcript with speakers and notes in the clinic's templates. An autofill under 90% confidence, or over a filled field, is only a suggestion, and the AI's first draft is kept as version 0.</p><span class="proof">Quotes must appear word for word in the source.</span></div>
+        <div class="show"><h3>Memory that cannot drift</h3><p>Each clinician's preferences are learned from their edits. A rewritten rule must keep the original wording, pass a second model's drift check, and can be reverted in one click; template changes are only ever proposed.</p><span class="proof">Examples taken from edits are redacted first.</span></div>
+        <div class="show"><h3>One model setup for every purpose</h3><p>Each organisation picks a model for each of 11 purposes, all on Bedrock's Converse API. Every call writes a usage row with its cost, and every AI feature ships behind a flag with a kill switch.</p><span class="proof">15 eval suites run the real prompts on the real models.</span></div>
+      </div>
+      <div class="sub">
+        <div class="decisions">
+          <div class="decision"><h3>Evals with safety gates, not just scores</h3><p>A case passes on a majority of repeated attempts, and one false accept or one wrong patient fails the whole run. That is how a candidate model that scored 18/20 on the filing check, with two false accepts, was turned down; the model in use scored 20/20 with none.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="clinic-stack" aria-labelledby="h-clinic-stack">
+      <div class="sec-head">
+        <span class="label">Full stack design</span>
+        <h2 id="h-clinic-stack">From the database to a phone screen</h2>
+      </div>
+      <div class="stack" role="figure" aria-label="The parts of the platform, from clients to data">
+        <div class="zone">
+          <span class="label">Clients</span>
+          <span class="tech">React 19 · Vite · TanStack Query · Zustand · Tailwind · Mantine</span>
+          <ul>
+            <li>A dense, keyboard-first web app with a phone layout</li>
+            <li>A waiting-room kiosk for patients' forms</li>
+            <li>One WebSocket for live updates, with polling where networks block it</li>
+          </ul>
+        </div>
+        <div class="zone">
+          <span class="label">API</span>
+          <span class="tech">Node 22 · Express 5 · Prisma · Zod</span>
+          <ul>
+            <li>70 route modules and 1,000+ endpoints, authorization on every router</li>
+            <li>One code base, run as API, worker or job pool</li>
+            <li>30 background workers; jobs claimed with leases</li>
+          </ul>
+        </div>
+        <div class="zone">
+          <span class="label">Data and services</span>
+          <span class="tech">PostgreSQL · pgvector · FHIR R4 · S3 · Redis · Bedrock</span>
+          <ul>
+            <li>A database schema per organisation</li>
+            <li>Patient identity and appointments in a FHIR server</li>
+            <li>Files in S3 under each organisation's prefix</li>
+          </ul>
+        </div>
+      </div>
+      <div class="sub">
+        <span class="label">Data and tenancy</span>
+        <div class="decisions">
+          <div class="decision"><h3>A schema per organisation, isolation proven on a real database</h3><p>Each organisation gets its own PostgreSQL schema, cloned from a template with structure only, and its own FHIR project. The organisation comes from a header checked against the user's memberships, never trusted from the token, and a missing FHIR credential fails closed. Most tests mock the database, so a test on real Postgres proves the isolation.</p></div>
+          <div class="decision"><h3>FHIR where it is the standard, Postgres where the clinic works</h3><p>Identity, appointments and questionnaires live in FHIR; procedure tracks, insurance and tasks in Postgres. A patient is written locally first and synced by a worker with an idempotent create, so registration works while FHIR is down, and a FHIR read times out at five seconds and falls back.</p></div>
+          <div class="decision"><h3>Migrations that never stop the app</h3><p>Changes are additive, because old and new code run side by side during a rolling reload. CI replays the whole migration history into a throwaway database and diffs it against the schema, and the authoring script refuses a DROP.</p></div>
+          <div class="decision"><h3>Stock as lines, with a ledger</h3><p>An item's stock is a set of lines, each a place, a lot and an expiry, and the item's total is their sum, written in the same transaction under a lock. Every change names its line in a ledger, and a transfer between sites is in transit until it is received or cancelled, once.</p></div>
+        </div>
+      </div>
+      <div class="sub">
+        <span class="label">Security and audit</span>
+        <div class="decisions">
+          <div class="decision"><h3>Authorization nobody can forget</h3><p>Permissions are resource-and-action pairs per organisation, and every denial is audited. A test fails the build if a router is added without authentication; each public one carries a written reason.</p></div>
+          <div class="decision"><h3>An audit log that shows tampering</h3><p>Writes and reads of patient data are captured automatically. Each row carries an HMAC and cannot be updated, each day is sealed with a digest, and the log exports as FHIR AuditEvent and OCSF. An assistant run's id is the trace id that ties its audit rows to its logs.</p></div>
+          <div class="decision"><h3>Patient data stays out of queues and logs</h3><p>Queue messages carry ids only, enforced in code, and logs are redacted. A signed form is sealed with a SHA-256 hash of the exact text and an HMAC. A fax is never retried blindly: a duplicate fax is a duplicate disclosure.</p></div>
+        </div>
+      </div>
+      <div class="sub">
+        <span class="label">Frontend</span>
+        <div class="decisions">
+          <div class="decision"><h3>An Excel-like table, built for density</h3><p>DenseTable is a CSS Grid with fixed pixel columns, so resizing one never moves another; 22 or 24 px rows; Excel-style keyboard movement between cells; sorting and filtering on the server, with the same matching rules in the browser; and a failed load is never shown as an empty list.</p></div>
+          <div class="decision"><h3>One list of columns, a table or cards</h3><p>A sheet is one list of columns, drawn as a table on a wide screen and as labelled cards on a phone, so the two cannot drift. One Field component draws every input: the page sets its size, text is 16 px on touch so iOS does not zoom, and dates follow the clinic's time zone, not the device's.</p></div>
+          <div class="decision"><h3>Work that survives the browser</h3><p>Uploads go straight to S3 in 5 MB parts, four at a time, and carry on while the user moves around the app. A visit recording is saved to IndexedDB every second and sent at the next start if it never finished. A stale save is refused with the server's copy, never written over another tab's.</p></div>
+        </div>
+        <p class="fine">984 test files and over 15,000 tests (Vitest and Testing Library, 22 suites against a real Postgres), a headless check that every field's text lines up within half a pixel at desktop and phone widths, and 8 CI workflows. Releases are rolling reloads with no downtime.</p>
+      </div>
+    </section>
+
+    <section id="clinic-next" aria-labelledby="h-clinic-next">
+      <div class="sec-head">
+        <span class="label">In progress</span>
+        <h2 id="h-clinic-next">Next: the final stages of the assistant's v2 design</h2>
+        <p class="muted">A redesign against how current coding and research agents work, checked against the code line by line. Its first stages, a conversation as one append-only thread with its prompt frozen at the start, are ticketed and under way. These are the last three.</p>
+      </div>
+      <div class="log">
+        <div class="log-row"><div><h3>A tool list that never changes</h3><p class="muted">Stage C · tool delivery</p></div><p>A fixed head of core tools and a directory naming about 255 common actions. Full definitions arrive by retrieval or by exact name, and every call goes through one dispatcher that checks the tool, the user's permission and the arguments. The prompt cache then holds for the whole conversation.</p></div>
+        <div class="log-row"><div><h3>Plans, approvals and steering</h3><p class="muted">Stage D · interaction and control</p></div><p>A batch of writes is proposed as a plan and approved on one card, in full or in part; a write that leaves the plan needs approval again. Three cards refused or expired in a row stop the run to ask. The page shows each step as it runs, and a message sent mid-run is taken in after the current round instead of being refused.</p></div>
+        <div class="log-row"><div><h3>Sub-agents and a checker</h3><p class="muted">Stage E · delegation</p></div><p>A task tool starts sub-agents on child threads, inside the turn or in the background job pool, in parallel under a cap and a budget: research, data analysis, document review. Read-only by default, each returns a structured report with its sources. A long result can go to an independent checker that grades it against a rubric and sends it back for rework.</p></div>
+        <div class="log-row"><div><h3>Code execution for work at scale</h3><p class="muted">Stage E · deep mode</p></div><p>For work over many records, the model writes a short script that loops over read-only tools and sub-agents and returns only the result: check 200 follow-ups, summarise them by provider. It runs in a sandboxed interpreter in a worker process; writes stay outside the script, on cards.</p></div>
+        <div class="log-row"><div><h3>A personal workspace</h3><p class="muted">Stage E · memory</p></div><p>One folder for the model: its own notes in Postgres, the user's files in S3, and search over their past conversations, isolated by organisation and user. It keeps record ids, never copies, so every read is permission-checked again.</p></div>
+      </div>
+    </section>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// One project shows at a time, picked by its tab or by a link to one of its sections, and the nav's
+// dot for the section on screen fills in. Without this script both projects show, one after the
+// other, and every link still works.
+(() => {
+  const tabs = [...document.querySelectorAll('.projects a')];
+  const panels = [...document.querySelectorAll('.project')];
+  const navs = [...document.querySelectorAll('.side nav[data-for]')];
+  const links = new Map([...document.querySelectorAll('.side nav[data-for] a')].map((a) => [a.getAttribute('href').slice(1), a]));
+  let current = panels[0].id;
+  const set = (id) => links.forEach((a, key) => a.setAttribute('aria-current', key === id ? 'true' : 'false'));
+  const sectionsOf = (panelId) => [...document.getElementById(panelId).querySelectorAll(':scope > section')];
+  const show = (panelId) => {
+    current = panelId;
+    panels.forEach((p) => { p.hidden = p.id !== panelId; });
+    navs.forEach((n) => { n.hidden = n.dataset.for !== panelId; });
+    tabs.forEach((t) => t.setAttribute('aria-current', t.dataset.for === panelId ? 'true' : 'false'));
+    set(sectionsOf(panelId)[0].id);
+  };
+  const targetOf = (hash) => (hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null);
+  tabs.forEach((t) => t.addEventListener('click', (e) => {
+    e.preventDefault();
+    show(t.dataset.for);
+    history.replaceState(null, '', t.getAttribute('href'));
+    window.scrollTo({ top: 0 });
+  }));
+  // A link to a section of the other project opens that project first, then scrolls to it.
+  const follow = (first) => {
+    const target = targetOf(location.hash);
+    const panelId = target?.closest('.project')?.id ?? panels[0].id;
+    const wasHidden = document.getElementById(panelId).hidden;
+    show(panelId);
+    // Hiding the other project moves everything: scroll again on a first load with a link.
+    if (target && (wasHidden || first)) target.scrollIntoView();
+  };
+  window.addEventListener('hashchange', () => follow(false));
+  follow(true);
+
+  if (!('IntersectionObserver' in window) || links.size === 0) return;
+  const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+  const last = () => sectionsOf(current).at(-1).id;
+  const seen = new Map();
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) seen.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0);
+    // Near the end of the page the last section may never fill the band; it wins there.
+    if (atEnd()) return set(last());
+    const best = [...seen].filter(([id, r]) => r > 0 && links.has(id) && document.getElementById(id).closest('.project').id === current).sort((a, b) => b[1] - a[1])[0];
+    if (best) set(best[0]);
+  }, { rootMargin: '-20% 0px -55% 0px', threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] });
+  links.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
+  window.addEventListener('scroll', () => { if (atEnd()) set(last()); }, { passive: true });
+})();
+</script>
 </body>
 </html>
