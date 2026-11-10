@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yuanzhe Lu</title>
-<meta name="description" content="Yuanzhe Lu: portfolio. a clinic workflow platform built end to end with an AI assistant at its centre, and an automated workflow that takes tickets from a GitHub Project board to merged pull requests with Claude agents.">
+<meta name="description" content="Yuanzhe Lu: portfolio. A clinic workflow platform built end to end with an AI assistant at its centre, and an automated workflow that takes tickets from a GitHub Project board to merged pull requests with Claude agents.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
@@ -244,8 +244,6 @@ section { display: grid; gap: 1.4rem; scroll-margin-top: 2rem; }
 .meter { height: 0.8rem; border-radius: 3px; overflow: hidden; background: var(--line); }
 .meter span { display: block; height: 100%; }
 .sub > .label + .decisions { margin-top: -0.25rem; }
-
-footer { padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: 0.88rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; justify-content: space-between; }
 </style>
 <style>html { -webkit-text-size-adjust: 100%; } body { margin: 0; } img { max-width: 100%; } :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }</style>
 </head>
@@ -505,8 +503,8 @@ footer { padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: 0.8
         <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Pick the tools</h3><p>12 core tools, plus 12 of about 480 found by keyword and embedding search fused by rank; the long tail is one search away. A tool the user's role cannot use is never offered.</p></li>
         <li class="stage" data-who="agent"><span class="dot"></span><h3><span class="who">Agent</span>Plan and look up</h3><p>A checklist for a request of several steps. Reads in a round run together; writes run one at a time, in order.</p></li>
         <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Call the API as the user</h3><p>Every tool goes back through the API with the user's own credentials, so permissions, tenant and audit are the real ones. A result over 8,000 characters is kept whole and read in parts.</p></li>
-        <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Treat results as data</h3><p>Every result goes back marked as data, not instructions. Text that reads like an instruction is cautioned and logged, never dropped.</p></li>
-        <li class="stage" data-who="person"><span class="dot"></span><h3><span class="who">Person</span>Confirm the write</h3><p>A write becomes a card naming what it changes, with fields to edit. Single-use, the user's own, gone after ten minutes; a second click gets the first result back.</p></li>
+        <li class="stage" data-who="rule"><span class="dot"></span><h3><span class="who">Rule</span>Treat results as data</h3><p>Every result goes back to the model marked as data, not instructions.</p></li>
+        <li class="stage" data-who="person"><span class="dot"></span><h3><span class="who">Person</span>Confirm the write</h3><p>A write becomes a card naming what it changes, with fields to edit. It can be confirmed once, by its own user; a second click gets the first result back.</p></li>
         <li class="stage" data-who="done"><span class="dot"></span><h3><span class="who">Record</span>Summarise the run</h3><p>How it ended, rounds, tool calls, cost and the build that served it: ids and counts, never content.</p></li>
       </ol>
       <div class="track-note">
@@ -519,7 +517,7 @@ footer { padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: 0.8
         <div class="decisions">
           <div class="decision"><h3>Tools made from the API's own schemas</h3><p>Some tools are hand-written; most were generated from an audit of the API's endpoints. A write tool takes its parameters from the same Zod schema its endpoint validates with, so the two cannot drift. An organisation can switch a tool off or add its own phrasing for retrieval, never rewrite one: names and descriptions stay in code, reviewed and measured.</p></div>
           <div class="decision"><h3>My own confirmation cards, not the framework's</h3><p>LangChain's human-in-the-loop middleware failed my proof of concept: it held reads back until approval, dropped an approved write when another was rejected, and ran a write twice on a double click. Writes became stored, single-use cards that any server process can confirm.</p></div>
-          <div class="decision"><h3>Writes need a click; reads need a guard</h3><p>With every write behind a click, the exposed surface is what the model reads: faxes, documents and form answers can carry text aimed at it. The guard observes and cautions and never blocks, because a clinical note that happens to look like an instruction must still reach the model; silently dropping data is the worse failure.</p></div>
+          <div class="decision"><h3>Writes need a click; reads are data</h3><p>With every write behind a click, what is left to defend is what the model reads: documents and form answers can carry text aimed at it. Everything it reads reaches it as data, and the defence was designed so that a clinical note is never lost on the way: silently dropping patient data would be the worse failure.</p></div>
         </div>
       </div>
     </section>
@@ -621,14 +619,14 @@ footer { padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: 0.8
           <ul>
             <li>A database schema per organisation</li>
             <li>Patient identity and appointments in a FHIR server</li>
-            <li>Files in S3 under each organisation's prefix</li>
+            <li>Files in S3, kept apart by organisation</li>
           </ul>
         </div>
       </div>
       <div class="sub">
         <span class="label">Data and tenancy</span>
         <div class="decisions">
-          <div class="decision"><h3>A schema per organisation, isolation proven on a real database</h3><p>Each organisation gets its own PostgreSQL schema, cloned from a template with structure only, and its own FHIR project. The organisation comes from a header checked against the user's memberships, never trusted from the token, and a missing FHIR credential fails closed. Most tests mock the database, so a test on real Postgres proves the isolation.</p></div>
+          <div class="decision"><h3>A schema per organisation, isolation proven on a real database</h3><p>Each organisation gets its own PostgreSQL schema and its own FHIR project. Every request is scoped to one organisation the user belongs to, and fails closed when it cannot be. Most tests mock the database, so a test on real Postgres proves the isolation.</p></div>
           <div class="decision"><h3>FHIR where it is the standard, Postgres where the clinic works</h3><p>Identity, appointments and questionnaires live in FHIR; procedure tracks, insurance and tasks in Postgres. A patient is written locally first and synced by a worker with an idempotent create, so registration works while FHIR is down, and a FHIR read times out at five seconds and falls back.</p></div>
           <div class="decision"><h3>Migrations that never stop the app</h3><p>Changes are additive, because old and new code run side by side during a rolling reload. CI replays the whole migration history into a throwaway database and diffs it against the schema, and the authoring script refuses a DROP.</p></div>
           <div class="decision"><h3>Stock as lines, with a ledger</h3><p>An item's stock is a set of lines, each a place, a lot and an expiry, and the item's total is their sum, written in the same transaction under a lock. Every change names its line in a ledger, and a transfer between sites is in transit until it is received or cancelled, once.</p></div>
@@ -637,9 +635,9 @@ footer { padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: 0.8
       <div class="sub">
         <span class="label">Security and audit</span>
         <div class="decisions">
-          <div class="decision"><h3>Authorization nobody can forget</h3><p>Permissions are resource-and-action pairs per organisation, and every denial is audited. A test fails the build if a router is added without authentication; each public one carries a written reason.</p></div>
-          <div class="decision"><h3>An audit log that shows tampering</h3><p>Writes and reads of patient data are captured automatically. Each row carries an HMAC and cannot be updated, each day is sealed with a digest, and the log exports as FHIR AuditEvent and OCSF. An assistant run's id is the trace id that ties its audit rows to its logs.</p></div>
-          <div class="decision"><h3>Patient data stays out of queues and logs</h3><p>Queue messages carry ids only, enforced in code, and logs are redacted. A signed form is sealed with a SHA-256 hash of the exact text and an HMAC. A fax is never retried blindly: a duplicate fax is a duplicate disclosure.</p></div>
+          <div class="decision"><h3>Authorization nobody can forget</h3><p>Permissions are set per organisation, and a test fails the build if a route is added without authentication.</p></div>
+          <div class="decision"><h3>An audit log that shows tampering</h3><p>Access to patient data is recorded automatically, in a log built so that any change to it shows, and it exports in standard formats. An assistant run can be traced from its audit entries to its logs.</p></div>
+          <div class="decision"><h3>Patient data stays out of queues and logs</h3><p>Background jobs carry references, never patient data, and logs are redacted. A signed form is sealed to the exact text that was signed.</p></div>
         </div>
       </div>
       <div class="sub">
